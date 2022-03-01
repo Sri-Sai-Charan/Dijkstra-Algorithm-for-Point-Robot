@@ -14,11 +14,23 @@ class lists():
     def __init__(self):
         self.OpenNodes = []
         self.ClosedNodes = []
-
+        self.visited = []
 class action():
     def __init__(self):
-        self. action_sets= [(1,0),(-1,0), (0,1), (0,-1), (1,1), (-1,1),(1,-1),(-1,-1)]
+        self.action_sets= [(1,0),(-1,0), (0,1), (0,-1), (1,1), (-1,1),(1,-1),(-1,-1)]
         self.cost = [1,1,1,1,1.4,1.4,1.4,1.4]
+
+def DijkstraAlogrithm(start,goal,my_map):
+    current = start
+    my_lists = lists()
+    my_lists.visited.append(current)
+    my_lists.OpenNodes.append(current)
+
+    while current.position != goal.position :
+        check_future_state(current,my_map,my_lists)
+        current = my_lists.OpenNodes[0]
+
+    print("Goal reached",current.position)
 
 def check_validity_position(node,my_map):
     position = node.position
@@ -27,50 +39,64 @@ def check_validity_position(node,my_map):
         print("Invalid Start or Goal node")
         return False
     else:
-        # print("Valid Goal and Start Nodes")
+        print("Valid Goal and Start Nodes")
         return True
 
-def DijkstraAlogrithm(start,goal,my_map):
-    current = start
-    my_lists = lists()
-    while current.position != goal.position :
-        my_lists.OpenNodes.append(current)
-        if current.position == goal.position:
-            BackTrace()
-            break
-        else:
-            check_future_state(current,my_map,my_lists)
-            my_lists.ClosedNodes.append(current)
-            break
+
+
+
 
 def check_visited(visited,future):
     for ite in range(len(visited)):
-        if (visited[ite].position==future.position).all():
+        if ((visited[ite].position[0]==future.position[0])and(visited[ite].position[1]==future.position[1])):
+            # print("Already visited")
             if visited[ite].cost>future.cost:
                 visited[ite].cost = future.cost
             return False
         else:
             visited.append(future)
+            # print("not visited")
             return True
+
+
+
 
 def check_future_state(current,my_map,my_lists):
     actions = action()
+    lowest_cost = np.inf
+    temp_nodes = []
     for ite in range(0,8):
         move = [0,0]
         move[0] = current.position[0] + actions.action_sets[ite][0]
         move[1] = current.position[1] + actions.action_sets[ite][1]
         cost = current.cost
         cost +=  actions.cost[ite]
+        
         if (my_map[move[0],move[1]]!=[255,255,255]).all():
             future = nodes([0,0])
             future.position = move
             future.cost = cost
-            # print(current.position,future.position,future.cost)
-            my_lists.OpenNodes.append(future)
-    my_lists.OpenNodes.pop(0)
 
+            if (check_visited(my_lists.visited,future)):
+                temp_nodes.append(future)
+    temp_nodes= sort_array_by_cost(temp_nodes)
+    for i in range(len(temp_nodes)):
+        my_lists.OpenNodes.append(temp_nodes.pop())
+    my_lists.OpenNodes.pop(0)   
+   
+
+def sort_array_by_cost(nodes):
+    # temp = []
+    for i in range(len(nodes)-1):
+        for j in range(i):
+            if nodes[i].cost > nodes[j].cost:
+                temp = nodes[j]
+                nodes[j] = nodes[i]
+                nodes[i] = temp
+
+    return nodes
 def BackTrace():
-    temp = 0
+    return 0
 
 def half_planes(my_map,point1,point2,obstacle_color,upper):
     m = (point2[0]-point1[0])/(point2[1]-point1[1]+(1e-6))
@@ -141,14 +167,17 @@ def PopulateMap(my_map,obstacle_color):
 
     my_map = cv.bitwise_or(other_obstacle_map,hexagon_map)
     my_map = cv.bitwise_or(my_map,circle_map)
-    cv.imshow("Obstacle Space",my_map)
-    cv.waitKey(0)
+    
+    return my_map
+
 def main():
     my_map = np.zeros((252,402,3))
     obstacle_color = [255,255,255]
-    PopulateMap(my_map,obstacle_color)
+    my_map = PopulateMap(my_map,obstacle_color)
     start_node = nodes([2,2])
-    goal_node = nodes([250,400])
+    start_node.cost = 0
+    goal_node = nodes([5,4])
+    
     if check_validity_position(start_node,my_map):
         if check_validity_position(goal_node,my_map):
             DijkstraAlogrithm(start_node,goal_node,my_map)
