@@ -188,6 +188,7 @@ def main():
     my_map = np.zeros((252,402,3))
     obstacle_color = [255,255,255]
     my_map = PopulateMap(my_map,obstacle_color)
+    
     start_node = nodes([2,2])
     start_node.cost = 0
     start_node.parent = [0,0]
