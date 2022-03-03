@@ -10,6 +10,8 @@ class nodes():
         self.cost = np.inf
         self.parent = [0,0]
 
+visited_map = np.zeros((252,402))
+cost_map = np.ones((252,402))*1000
 class lists():
     def __init__(self):
         self.OpenNodes = []
@@ -26,12 +28,15 @@ def DijkstraAlogrithm(start,goal,my_map):
     # print(len(my_lists.OpenNodes))
     my_lists.visited.append(current)
     my_lists.OpenNodes.append(current)
-    
+    path_map = my_map.copy()
     
     count = 0
     while current.position != goal.position :
-        check_future_state(current,my_map,my_lists)
+        check_future_state(current,my_map,my_lists,path_map)
         current = my_lists.OpenNodes[0]
+        
+        cv.imshow("Path",path_map)
+        cv.waitKey(1)
         count = count +1
         print(count)
         print(current.position)
@@ -49,6 +54,16 @@ def check_validity_position(node,my_map):
         # print("Valid Goal and Start Nodes")
         return True
 
+def hashmap_implementation(future):
+    if visited_map[future.position[0],future.position[1]]==1:
+        if cost_map[future.position[0],future.position[1]] > future.cost:
+            cost_map[future.position[0],future.position[1]] = future.cost
+        return False
+    else:
+        visited_map[future.position[0],future.position[1]] = 1
+        return True
+
+
 
 def check_visited(visited,future):
     # print(len(visited))
@@ -60,14 +75,14 @@ def check_visited(visited,future):
                 visited[ite].cost = future.cost
                 visited[ite].parent = future.parent
             return False
-        else:
-            visited.append(future)
+    
+    visited.append(future)
             # print("not visited")
-            return True
+    return True
     # print("Called Once")
     exit()
 
-def check_future_state(current,my_map,my_lists):
+def check_future_state(current,my_map,my_lists,path_map):
     actions = action()
     lowest_cost = np.inf
     temp_nodes = []
@@ -76,19 +91,29 @@ def check_future_state(current,my_map,my_lists):
         move = [0,0]
         move[0] = current.position[0] + actions.action_sets[ite][0]
         move[1] = current.position[1] + actions.action_sets[ite][1]
+        cost = 0
         cost = current.cost + actions.cost[ite]
         # cost +=  actions.cost[ite]
         
-        if (int(my_map[move[0],move[1],0])!=255):
+        if (int(my_map[move[0],move[1],1])!=255):
             
             future = nodes([0,0])
             future.position = move
             future.cost = cost
             future.parent = current.position
-            if (check_visited(my_lists.visited,future)):
+            if hashmap_implementation(future):
+            # if (check_visited(my_lists.visited,future)):
                 my_lists.OpenNodes.append(future)
+                # endix = len(my_lists.OpenNodes)-1
+                if (int(my_map[move[0],move[1],1])!=255):
+                    path_map[my_lists.OpenNodes[0].position[0],my_lists.OpenNodes[0].position[1]]=[0,255,0]
+                # my_map[future.position,:] = [255,0,0]
+                # cv.imshow("my_map",my_map)
+                # cv.waitKey(1)
                 # print("This print works",my_map[move[0],move[1],0])
                 # print("Temp node length :",len(temp_nodes))
+        else:
+            print("Obstacle Detected")
     # temp_nodes= sort_array_by_cost(temp_nodes)
     # for i in range(len(temp_nodes)):
     #     my_lists.OpenNodes.append(temp_nodes.pop(0))
@@ -143,13 +168,16 @@ def PopulateMap(my_map,obstacle_color):
                         
     side1=half_planes(hexagon_map,hexagon_pts[0],hexagon_pts[1],obstacle_color,False)
     side2=half_planes(hexagon_map,hexagon_pts[1],hexagon_pts[2],obstacle_color,True)
-    side2 = side2 * side1
+    # side2 = side2 * side1
+    side2 = cv.bitwise_and(side2,side1)
     side3=half_planes(hexagon_map,hexagon_pts[2],hexagon_pts[3],obstacle_color,True)
     side4=half_planes(hexagon_map,hexagon_pts[3],hexagon_pts[4],obstacle_color,True)
     side5=half_planes(hexagon_map,hexagon_pts[4],hexagon_pts[5],obstacle_color,False)
-    side5=side5*side4
+    # side5=side5*side4
+    side5=cv.bitwise_and(side5,side4)
     side6=half_planes(hexagon_map,hexagon_pts[5],hexagon_pts[0],obstacle_color,False)
-    side6=side6*side3
+    # side6=side6*side3
+    side6 = cv.bitwise_and(side3,side6)
     my_map = cv.bitwise_and(side2,side5)
     hexagon_map = cv.bitwise_and(my_map,side6)
 
@@ -162,7 +190,8 @@ def PopulateMap(my_map,obstacle_color):
     side1=half_planes(other_obstacle_map,other_obstacle[0],other_obstacle[1],obstacle_color,False)
     side2=half_planes(other_obstacle_map,other_obstacle[1],other_obstacle[3],obstacle_color,True)
     side3=half_planes(other_obstacle_map,other_obstacle[3],other_obstacle[0],obstacle_color,False)
-    side2 = side1*side2
+    # side2 = side1*side2
+    side2 = cv.bitwise_and(side1,side2)
     side3 = cv.bitwise_and(side3,side2)
     mask1 = half_planes(other_obstacle_map,other_obstacle[1],other_obstacle[2],obstacle_color,True)
     mask2 = half_planes(other_obstacle_map,other_obstacle[2],other_obstacle[3],obstacle_color,True)
@@ -179,20 +208,21 @@ def PopulateMap(my_map,obstacle_color):
     my_map[:,401]=obstacle_color
     my_map[251,:]=obstacle_color
     my_map[:,0] = obstacle_color
-
-    # cv.imshow("my map ",my_map)
-    # cv.waitKey(0)
+    # my_map = my_map.astype(int)
     return my_map
 
 def main():
-    my_map = np.zeros((252,402,3))
+    my_map = np.zeros((252,402,3),dtype='uint8')
     obstacle_color = [255,255,255]
     my_map = PopulateMap(my_map,obstacle_color)
-    
+    print(my_map.shape)
+    # print("Hex codrs", my_map[164,170])
+    # cv.imshow("my map ",my_map)
+    # cv.waitKey(0)
     start_node = nodes([2,2])
     start_node.cost = 0
     start_node.parent = [0,0]
-    goal_node = nodes([249,399])
+    goal_node = nodes([132,112])
     
     if check_validity_position(start_node,my_map):
         if check_validity_position(goal_node,my_map):
