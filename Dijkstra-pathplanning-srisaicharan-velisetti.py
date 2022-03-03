@@ -8,7 +8,7 @@ class nodes():
     def __init__(self,position):
         self.position = position
         self.cost = np.inf
-        self.parent = (0,0)
+        self.parent = [0,0]
 
 class lists():
     def __init__(self):
@@ -23,68 +23,77 @@ class action():
 def DijkstraAlogrithm(start,goal,my_map):
     current = start
     my_lists = lists()
+    # print(len(my_lists.OpenNodes))
     my_lists.visited.append(current)
     my_lists.OpenNodes.append(current)
-
+    
+    
+    count = 0
     while current.position != goal.position :
         check_future_state(current,my_map,my_lists)
         current = my_lists.OpenNodes[0]
-
+        count = count +1
+        print(count)
+        print(current.position)
     print("Goal reached",current.position)
+    # for i in range(len(my_lists.visited)-1):
+    #     print(my_lists.visited[i].parent)
 
 def check_validity_position(node,my_map):
     position = node.position
     # print(position[0],position[1])
-    if (my_map[position[0],position[1],:]==[255,255,255]).all():
-        print("Invalid Start or Goal node")
+    if (my_map[position[0],position[1],0]==255):
+        # print("Invalid Start or Goal node")
         return False
     else:
-        print("Valid Goal and Start Nodes")
+        # print("Valid Goal and Start Nodes")
         return True
 
 
-
-
-
 def check_visited(visited,future):
-    for ite in range(len(visited)):
+    # print(len(visited))
+    for ite in range((len(visited)-1),-1,-1):
+        # print(ite)
         if ((visited[ite].position[0]==future.position[0])and(visited[ite].position[1]==future.position[1])):
             # print("Already visited")
             if visited[ite].cost>future.cost:
                 visited[ite].cost = future.cost
+                visited[ite].parent = future.parent
             return False
         else:
             visited.append(future)
             # print("not visited")
             return True
-
-
-
+    # print("Called Once")
+    exit()
 
 def check_future_state(current,my_map,my_lists):
     actions = action()
     lowest_cost = np.inf
     temp_nodes = []
-    for ite in range(0,8):
+    
+    for ite in range(8):
         move = [0,0]
         move[0] = current.position[0] + actions.action_sets[ite][0]
         move[1] = current.position[1] + actions.action_sets[ite][1]
-        cost = current.cost
-        cost +=  actions.cost[ite]
+        cost = current.cost + actions.cost[ite]
+        # cost +=  actions.cost[ite]
         
-        if (my_map[move[0],move[1]]!=[255,255,255]).all():
+        if (int(my_map[move[0],move[1],0])!=255):
+            
             future = nodes([0,0])
             future.position = move
             future.cost = cost
-
+            future.parent = current.position
             if (check_visited(my_lists.visited,future)):
-                temp_nodes.append(future)
-    temp_nodes= sort_array_by_cost(temp_nodes)
-    for i in range(len(temp_nodes)):
-        my_lists.OpenNodes.append(temp_nodes.pop())
-    my_lists.OpenNodes.pop(0)   
-   
-
+                my_lists.OpenNodes.append(future)
+                # print("This print works",my_map[move[0],move[1],0])
+                # print("Temp node length :",len(temp_nodes))
+    # temp_nodes= sort_array_by_cost(temp_nodes)
+    # for i in range(len(temp_nodes)):
+    #     my_lists.OpenNodes.append(temp_nodes.pop(0))
+    my_lists.OpenNodes.pop(0) 
+    # print(len(my_lists.OpenNodes))
 def sort_array_by_cost(nodes):
     # temp = []
     for i in range(len(nodes)-1):
@@ -95,6 +104,7 @@ def sort_array_by_cost(nodes):
                 nodes[i] = temp
 
     return nodes
+
 def BackTrace():
     return 0
 
@@ -113,11 +123,7 @@ def half_planes(my_map,point1,point2,obstacle_color,upper):
     return temp
 
 def PopulateMap(my_map,obstacle_color):
-    #Border
-    my_map[0,:]=obstacle_color
-    my_map[:,401]=obstacle_color
-    my_map[251,:]=obstacle_color
-    my_map[:,0] = obstacle_color
+
 
     #Circle
     circle_map = np.zeros_like(my_map)
@@ -167,7 +173,15 @@ def PopulateMap(my_map,obstacle_color):
 
     my_map = cv.bitwise_or(other_obstacle_map,hexagon_map)
     my_map = cv.bitwise_or(my_map,circle_map)
-    
+
+    #Border
+    my_map[0,:]=obstacle_color
+    my_map[:,401]=obstacle_color
+    my_map[251,:]=obstacle_color
+    my_map[:,0] = obstacle_color
+
+    # cv.imshow("my map ",my_map)
+    # cv.waitKey(0)
     return my_map
 
 def main():
@@ -176,7 +190,8 @@ def main():
     my_map = PopulateMap(my_map,obstacle_color)
     start_node = nodes([2,2])
     start_node.cost = 0
-    goal_node = nodes([5,4])
+    start_node.parent = [0,0]
+    goal_node = nodes([249,399])
     
     if check_validity_position(start_node,my_map):
         if check_validity_position(goal_node,my_map):
