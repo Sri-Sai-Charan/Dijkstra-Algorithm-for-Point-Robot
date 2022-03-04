@@ -50,8 +50,8 @@ def back_track(start,current,path_map,my_map,visited_list):
         cv.imshow("Optimum Path Generation",optimum_path_map)
         cv.waitKey(1)
         
-    # cv.imshow("Optimum Path",optimum_path_map)
-    # cv.waitKey(0)
+    cv.imshow("Optimum Path",optimum_path_map)
+    cv.waitKey(1)
 
 def DijkstraAlogrithm(start,goal,my_map):
 
@@ -73,7 +73,7 @@ def DijkstraAlogrithm(start,goal,my_map):
 def check_validity_position(node,my_map):
     position1 = node.position
     if not (position1[0] > 249 | position1[1] > 399) :
-        if(int(my_map[position1[0],position1[1],1])==255):
+        if(int(my_map[position1[0],position1[1],1])>127):
             return False
         else:
             return True
@@ -104,7 +104,7 @@ def check_future_state(current,my_map,my_lists,path_map):
         cost = 0
         cost = current.cost + actions.cost[ite]
         
-        if (int(my_map[move[0],move[1],1])!=255):
+        if (int(my_map[move[0],move[1],1])<127):
             
             future = nodes([0,0])
             future.position = move
@@ -124,25 +124,30 @@ def half_planes(my_map,point1,point2,obstacle_color,upper):
         c = point1[0] - m*point1[1]
         for x in range(1,250):
             if upper :
-                if (y < ((m*x)+c)):
+                if (y <= ((m*x)+c)):
                     temp[x,y]= obstacle_color
             else:
-                if (y > ((m*x)+c)):
+                if (y >= ((m*x)+c)):
                     temp[x,y]= obstacle_color
     return temp
 
-def PopulateMap(my_map,obstacle_color):
+def PopulateMap(my_map,obstacle_color,tolerance=0):
 
     #Circle
     circle_map = np.zeros_like(my_map)
-    for i in range(64 - 45, 64 + 45):
-        for j in range(299 - 45, 299 + 45):
-            if (i - 64) **2 + (j - 299)**2 <= 45**2:
+    for i in range(24 - tolerance, 104 + tolerance):
+        for j in range(254 - tolerance, 344 + tolerance):
+            if (i - 64) **2 + (j - 299)**2 <= (40+tolerance)**2:
                 circle_map[i,j] = obstacle_color
 
     #Hexagon
     hexagon_map = np.zeros_like(my_map)       
-    hexagon_pts= np.array([[164,175], [199,195], [239,175], [239,125], [199,105], [164,125]],float)                        
+    hexagon_pts= np.array([[164 - tolerance*1.2 ,170 + tolerance], 
+                            [199,190+tolerance*1.6],    
+                            [234 +tolerance,170+tolerance], 
+                            [234 +tolerance,130 -tolerance], 
+                            [199,110 - tolerance*1.2], 
+                            [164 - tolerance,130 - tolerance]],float)             
     side1=half_planes(hexagon_map,hexagon_pts[0],hexagon_pts[1],obstacle_color,False)
     side2=half_planes(hexagon_map,hexagon_pts[1],hexagon_pts[2],obstacle_color,True)
     side2 = cv.bitwise_and(side2,side1)
@@ -157,7 +162,10 @@ def PopulateMap(my_map,obstacle_color):
 
     #Other Obstace
     other_obstacle_map = np.zeros_like(my_map)  
-    other_obstacle= np.array([[31,60], [110,155], [95,75], [125,40]],float) 
+    other_obstacle= np.array([[34 - (tolerance*2.5) ,64 - tolerance*0.6  ], 
+                                [104 + tolerance*2,149 + (tolerance*4)], 
+                                [89 + tolerance,69 + tolerance ], 
+                                [114 + (tolerance*3),39 - (tolerance*(2))]],float)
     side1=half_planes(other_obstacle_map,other_obstacle[0],other_obstacle[1],obstacle_color,False)
     side2=half_planes(other_obstacle_map,other_obstacle[1],other_obstacle[3],obstacle_color,True)
     side3=half_planes(other_obstacle_map,other_obstacle[3],other_obstacle[0],obstacle_color,False)
@@ -173,12 +181,12 @@ def PopulateMap(my_map,obstacle_color):
     my_map = cv.bitwise_or(my_map,circle_map)
 
     #Border
-    my_map[0:5,:]=obstacle_color
-    my_map[:,394:400]=obstacle_color
-    my_map[244:250,:]=obstacle_color
-    my_map[:,0:5] = obstacle_color
-
-    return my_map
+    my_map[0:5,:]= [128,128,128]
+    my_map[:,394:400]=[128,128,128]
+    my_map[244:250,:]=[128,128,128]
+    my_map[:,0:5] = [128,128,128]
+    
+    return my_map.copy()
 
 import random
 
@@ -196,8 +204,11 @@ def testing_random_cases():
         cost_map = np.ones((250,400),dtype=float)*1000
         parent_map = np.zeros((250,400,2),dtype='uint16')
         my_map = np.zeros((250,400,3),dtype='uint8')
+        my_map = np.zeros((250,400,3),dtype='uint8')
         obstacle_color = [255,255,255]
-        my_map = PopulateMap(my_map,obstacle_color)
+        tolerance_map = PopulateMap(my_map,obstacle_color,5)
+        obstacle_map = PopulateMap(my_map,obstacle_color)
+        my_map = cv.addWeighted(tolerance_map, 0.5, obstacle_map, 1, 0)
         start_node = nodes([start_x,start_y])
         start_node.cost = 0
         start_node.parent = [None,None]
@@ -223,15 +234,18 @@ def main():
 
     #Define your START and GOAL positions here
     ##########################################
-    start_x = 6
-    start_y = 6
-    goal_x = 240
-    goal_y = 390
+    start_x = 96
+    start_y = 50
+    goal_x = 8
+    goal_y = 200
     ###########################################
 
     my_map = np.zeros((250,400,3),dtype='uint8')
     obstacle_color = [255,255,255]
-    my_map = PopulateMap(my_map,obstacle_color)
+    tolerance_map = PopulateMap(my_map,obstacle_color,5)
+    obstacle_map = PopulateMap(my_map,obstacle_color)
+    my_map = cv.addWeighted(tolerance_map, 0.5, obstacle_map, 1, 0)
+
     start_node = nodes([start_x,start_y])
     start_node.cost = 0
     start_node.parent = [None,None]
