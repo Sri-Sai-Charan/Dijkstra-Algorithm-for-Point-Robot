@@ -50,10 +50,8 @@ def back_track(start,current,path_map,my_map,visited_list):
         cv.imshow("Optimum Path Generation",optimum_path_map)
         cv.waitKey(1)
         
-
-    
     # cv.imshow("Optimum Path",optimum_path_map)
-    # cv.waitKey(1)
+    # cv.waitKey(0)
 
 def DijkstraAlogrithm(start,goal,my_map):
 

@@ -18,7 +18,7 @@ This code employs hashmaps to reduce time complexity, by storing visited, cost a
 ### Installing
 
 * Download the zip file \ pull all files and extract into any workspace as the code is self-contained and does not require any particular environment. 
-* NOTE: test_random_cases will create 100 random pairs of start and goal nodes for Dijkstra to Compute and cv.waitKey(1) will limit each test case to a maximum complie time of 100 sec. you can comment lines 29 to 34 to only visualize the optimal path for each call of Dijkstra.
+* NOTE: test_random_cases will create 100 random pairs of start and goal nodes for Dijkstra to Compute and cv.waitKey(1) will limit each test case to a maximum complie time of 100 sec. You can comment lines 53, 54 to stop after each call of Dijkstra.
 
 ### Executing program
 
