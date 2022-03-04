@@ -185,10 +185,10 @@ def testing_random_cases():
     global cost_map 
     global parent_map 
     for ite in range(100):
-        start_x = random.randint(1,250)
-        start_y = random.randint(1,400)
-        goal_x =  random.randint(1,250)
-        goal_y = random.randint(1,400)
+        start_x = random.randint(1,249)
+        start_y = random.randint(1,399)
+        goal_x =  random.randint(1,249)
+        goal_y = random.randint(1,399)
 
         visited_map = np.zeros((250,400),dtype='uint16')
         cost_map = np.ones((250,400),dtype=float)*1000
