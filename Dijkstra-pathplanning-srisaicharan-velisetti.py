@@ -1,32 +1,21 @@
 #usr/bin/python3
-from operator import le
 from cv2 import bitwise_and
 import numpy as np
-import matplotlib.pyplot as plt
-# import py
 import cv2 as cv
+
 class nodes():
     def __init__(self,position):
         self.position = position
         self.cost = np.inf
         self.parent = [0,0]
 
-class Matrix: 
- 
-  def __init__(self, dims, fill):    
-     self.rows = dims[0]  
-     self.cols = dims[1]   
-     self.A = [[fill] * self.cols for i in range(self.rows)]
-
 visited_map = np.zeros((252,402),dtype='uint16')
 cost_map = np.ones((252,402),dtype=float)*1000
 parent_map = np.zeros((252,402,2),dtype='uint16')
 class lists():
     def __init__(self):
-        self.OpenNodes = []
-        # w, h = 252,402
-        # self.ClosedNodes = np.array((252,402))        
-        self.visited = []
+        self.OpenNodes = []      
+
 class action():
     def __init__(self):
         self.action_sets= [(1,0),(-1,0), (0,1), (0,-1), (1,1), (-1,1),(1,-1),(-1,-1)]
@@ -35,13 +24,9 @@ class action():
 def back_track(start,current,my_map):
     optimum_path = [[int(current.position[0]),int(current.position[1])]]
 
-    # optimum_path.append([int(current.position[0]),int(current.position[1])])
-
     while True:
         idx = len(optimum_path)-1
-        
         optimum_path.append(parent_map[optimum_path[idx][0],optimum_path[idx][1]])
-        # print(optimum_path[idx])
         if (optimum_path[idx][0] == start.position[0] and optimum_path[idx][1] == start.position[1]) :
             break
         
@@ -49,59 +34,50 @@ def back_track(start,current,my_map):
     while bool(optimum_path):
         idx = optimum_path.pop()
         optimum_path_map[idx[0],idx[1]] = [0,0,255]
-        # print(idx[0],idx[1])
+        # cv.imshow("Optimum Path Generation",optimum_path_map)
+        # cv.waitKey(1)
     cv.imshow("Optimum Path",optimum_path_map)
-    cv.waitKey(0)
-
+    cv.waitKey(2)
 
 def DijkstraAlogrithm(start,goal,my_map):
 
     current = start
     my_lists = lists()
-    my_lists.visited.append(current)
     my_lists.OpenNodes.append(current)
     path_map = my_map.copy()
-    sample_node = nodes([0,0])
-    ClosedNodes = Matrix((252,402),sample_node)
+
     while True :
-        check_future_state(current,my_map,my_lists,path_map,ClosedNodes)
+        check_future_state(current,my_map,my_lists,path_map)
         if current.position == goal.position:
             break
         current = my_lists.OpenNodes[0]
         # cv.imshow("Path",path_map)
         # cv.waitKey(1)
-
-    back_track(start,current,path_map)
-    
+    back_track(start,current,path_map)   
     print("Goal reached")
     
-def check_validity_position(start,goal,my_map):
-    position1 = start.position
-    position2 = goal.position
-    if (my_map[position1[0],position1[1],0]==255 | my_map[position2[0],position2[1],0]==255 ):
+def check_validity_position(node,my_map):
+    position1 = node.position
+    # position2 = goal.position
+    if (int(my_map[position1[0],position1[1],1])==255):
         return False
     else:
         return True
 
-def hashmap_implementation(future,ClosedNodes):
+def hashmap_implementation(future):
     if visited_map[future.position[0],future.position[1]]==1:
         if cost_map[future.position[0],future.position[1]] > future.cost:
             cost_map[future.position[0],future.position[1]] = future.cost
             parent_map[future.position[0],future.position[1]] = future.parent
-            # ClosedNodes.A[future.position[0]][future.position[1]].position = future.position
-            # ClosedNodes.A[future.position[0]][future.position[1]].cost = future.cost
-            # ClosedNodes.A[future.position[0]][future.position[1]].parent = future.parent
+
         return False
     else:
         cost_map[future.position[0],future.position[1]] = future.cost
         visited_map[future.position[0],future.position[1]] = 1
         parent_map[future.position[0],future.position[1]] = future.parent
-        # ClosedNodes.A[future.position[0]][future.position[1]].position = future.position
-        # ClosedNodes.A[future.position[0]][future.position[1]].parent = future.parent
         return True
 
-
-def check_future_state(current,my_map,my_lists,path_map,ClosedNodes):
+def check_future_state(current,my_map,my_lists,path_map):
     actions = action()
     
     for ite in range(8):
@@ -111,23 +87,19 @@ def check_future_state(current,my_map,my_lists,path_map,ClosedNodes):
         cost = 0
         cost = current.cost + actions.cost[ite]
         
-        
         if (int(my_map[move[0],move[1],1])!=255):
             
             future = nodes([0,0])
             future.position = move
             future.cost = cost
             future.parent = current.position
-            # print(future.position,future.cost)
-            if hashmap_implementation(future,ClosedNodes):
+            if hashmap_implementation(future):
                 my_lists.OpenNodes.append(future)
-                path_map[future.position[0],future.position[1]]=[0,255,0]
-                
-    # print("Open Nodes Length", len(my_lists.OpenNodes))
+                path_map[future.position[0],future.position[1]]=[0,255,0]                
+
     my_lists.OpenNodes.pop(0) 
     my_lists.OpenNodes = sorted(my_lists.OpenNodes,key=lambda x: x.cost , reverse=False)
     
-
 def half_planes(my_map,point1,point2,obstacle_color,upper):
     m = (point2[0]-point1[0])/(point2[1]-point1[1]+(1e-6))
     temp=np.zeros_like(my_map)
@@ -197,25 +169,68 @@ def PopulateMap(my_map,obstacle_color):
     my_map[:,401]=obstacle_color
     my_map[251,:]=obstacle_color
     my_map[:,0] = obstacle_color
-
+    # cv.imshow("Obstacle Space",my_map)
+    # cv.waitKey(0)
     return my_map
 
+import random
+
+def testing_all_test_cases():
+    global visited_map 
+    global cost_map 
+    global parent_map 
+    for ite in range(100):
+        start_x = random.randint(1, 250)
+        start_y = random.randint(1,400)
+        goal_x = random.randint(1,250)
+        goal_y = random.randint(1,400)
+
+        visited_map = np.zeros((252,402),dtype='uint16')
+        cost_map = np.ones((252,402),dtype=float)*1000
+        parent_map = np.zeros((252,402,2),dtype='uint16')
+        my_map = np.zeros((252,402,3),dtype='uint8')
+        obstacle_color = [255,255,255]
+        my_map = PopulateMap(my_map,obstacle_color)
+        start_node = nodes([start_x,start_y])
+        start_node.cost = 0
+        start_node.parent = [None,None]
+        goal_node = nodes([goal_x,goal_y])
+        cost_map[start_x,start_y] = 0.0
+        visited_map[start_x,start_y] = 1
+        parent_map[start_x,start_y] = [start_x,start_y]
+        print(start_x,start_y,goal_x,goal_y)
+        if check_validity_position(start_node,my_map):
+            if check_validity_position(goal_node,my_map):
+                print("calling dijkstra")
+                DijkstraAlogrithm(start_node,goal_node,my_map)
+            else:
+                goal_x +=1
+                goal_y +=1
+                
+        else:
+            start_x +=1
+            start_y +=1
 def main():
-    my_map = np.zeros((252,402,3),dtype='uint8')
-    obstacle_color = [255,255,255]
-    my_map = PopulateMap(my_map,obstacle_color)
+    # my_map = np.zeros((252,402,3),dtype='uint8')
+    # obstacle_color = [255,255,255]
+    # my_map = PopulateMap(my_map,obstacle_color)
+    # start_x = 2
+    # start_y = 2
+    # goal_x = 200
+    # goal_y = 341
+    # start_node = nodes([start_x,start_y])
+    # start_node.cost = 0
+    # start_node.parent = [None,None]
+    # goal_node = nodes([goal_x,goal_y])
+    # cost_map[start_x,start_y] = 0.0
+    # visited_map[start_x,start_y] = 1
+    # parent_map[start_x,start_y] = [start_x,start_y]
+    # print(start_x,start_y,goal_x,goal_y)
 
-    start_node = nodes([2,2])
-    start_node.cost = 0
-    start_node.parent = [None,None]
-    goal_node = nodes([250,400])
-    cost_map[2,2] = 0.0
-    visited_map[2,2] = 1
-    parent_map[2,2] = [2,2]
-    # print(visited_map[(2,2)])
-    if check_validity_position(start_node,goal_node,my_map):
-            DijkstraAlogrithm(start_node,goal_node,my_map)
-
+    # if check_validity_position(start_node,my_map):
+    #     if check_validity_position(goal_node,my_map):
+    #         DijkstraAlogrithm(start_node,goal_node,my_map)
+    testing_all_test_cases()
     
 if __name__ == '__main__':
     main()
