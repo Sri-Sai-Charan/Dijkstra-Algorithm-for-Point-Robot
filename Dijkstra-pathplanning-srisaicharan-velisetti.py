@@ -22,7 +22,7 @@ class action():
         self.cost = [1,1,1,1,1.4,1.4,1.4,1.4]
 
 def back_track(start,current,path_map,my_map,visited_list):
-    
+    frame = 0
 
     path_map = my_map.copy()
     visited_list.reverse()
@@ -30,8 +30,10 @@ def back_track(start,current,path_map,my_map,visited_list):
         
         idx = visited_list.pop()
         path_map[idx[0],idx[1]] = [0,255,0]
-        cv.imshow("Path Generation",path_map)
-        cv.waitKey(1)
+        if (frame % 100) ==0 :
+            cv.imshow("Path Generation",path_map)
+            cv.waitKey(1)
+        frame +=1
     optimum_path = [[int(current.position[0]),int(current.position[1])]]
 
     while True:
@@ -41,15 +43,17 @@ def back_track(start,current,path_map,my_map,visited_list):
             break
 
     optimum_path_map = path_map.copy()
+
     while bool(optimum_path):
         idx = optimum_path.pop()
         optimum_path_map[idx[0],idx[1]] = [0,0,255]
         cv.imshow("Optimum Path Generation",optimum_path_map)
         cv.waitKey(1)
+        
 
     
-    cv.imshow("Optimum Path",optimum_path_map)
-    cv.waitKey(0)
+    # cv.imshow("Optimum Path",optimum_path_map)
+    # cv.waitKey(1)
 
 def DijkstraAlogrithm(start,goal,my_map):
 
@@ -203,17 +207,22 @@ def testing_random_cases():
         cost_map[start_x,start_y] = 0.0
         visited_map[start_x,start_y] = 1
         parent_map[start_x,start_y] = [start_x,start_y]
-        print(start_x,start_y,goal_x,goal_y)
+        print("Start Node :",start_x,start_y, "Goal Node :",goal_x,goal_y)
         if check_validity_position(start_node,my_map):
             if check_validity_position(goal_node,my_map):
-                print("calling dijkstra")
                 DijkstraAlogrithm(start_node,goal_node,my_map)
             else:
                 print("Invalid Goal Position")                
         else:
             print("Invalid Start Position")
 
-def main():
+def main():    
+    #Tests 100 Random start and goal Nodes. 
+    #COMMENT BELOW LINE FOR INDIVIDUAL TEST CASE
+    ###########################################
+    testing_random_cases()
+    ###########################################
+
     #Define your START and GOAL positions here
     ##########################################
     start_x = 6
@@ -221,6 +230,7 @@ def main():
     goal_x = 240
     goal_y = 390
     ###########################################
+
     my_map = np.zeros((250,400,3),dtype='uint8')
     obstacle_color = [255,255,255]
     my_map = PopulateMap(my_map,obstacle_color)
@@ -239,7 +249,7 @@ def main():
             print("Incorrect Nodes")
     else:
         print("Incorrect Nodes")
-    # testing_random_cases()
+    
     
 if __name__ == '__main__':
     main()
