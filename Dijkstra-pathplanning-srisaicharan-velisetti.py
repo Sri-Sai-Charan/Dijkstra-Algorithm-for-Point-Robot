@@ -26,12 +26,19 @@ def back_track(start,current,path_map,my_map,visited_list):
 
     path_map = my_map.copy()
     visited_list.reverse()
+
+
+    vid_path_gen = cv.VideoWriter('./path_gen.avi',cv.VideoWriter_fourcc('M','J','P','G'), 30, (400,250))
+    vid_opt_path_gen = cv.VideoWriter('./opt_path_gen.avi',cv.VideoWriter_fourcc('M','J','P','G'), 30, (400,250))
+
+
     while bool(visited_list):
         
         idx = visited_list.pop()
         path_map[idx[0],idx[1]] = [0,255,0]
         if (frame % 100) ==0 :
             cv.imshow("Path Generation",path_map)
+            vid_path_gen.write(path_map)
             cv.waitKey(1)
         frame +=1
     optimum_path = [[int(current.position[0]),int(current.position[1])]]
@@ -48,6 +55,7 @@ def back_track(start,current,path_map,my_map,visited_list):
         idx = optimum_path.pop()
         optimum_path_map[idx[0],idx[1]] = [0,0,255]
         cv.imshow("Optimum Path Generation",optimum_path_map)
+        vid_opt_path_gen.write(optimum_path_map)
         cv.waitKey(1)
         
     cv.imshow("Optimum Path",optimum_path_map)
