@@ -34,10 +34,11 @@ CTRL + ALT + N
 ```
 
 ### Results
-*Path Generation
+
+* Path Generation
 ![alt text](https://github.com/Sri-Sai-Charan/Dijkstra-Algorithm-for-Point-Robot/blob/main/Results/path_gen.gif)
 
-*Optimum Path Generation
+* Optimum Path Generation
 ![alt text](https://github.com/Sri-Sai-Charan/Dijkstra-Algorithm-for-Point-Robot/blob/main/Results/opt_path_gen.gif)
 
 ## Authors
