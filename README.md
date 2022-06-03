@@ -1,6 +1,17 @@
 # Dijkstra-Algorithm-for-Point-Robot
 An individual project aimed at implementing Dijkstra's path planning algorithm on a point robot to navigate a map that contains obstacles
-
+## Folder Structure
+```
+📦Dijkstra-Algorithm-for-Point-Robot
+ ┣ 📂Results
+ ┃ ┣ 📜opt_path_gen.avi
+ ┃ ┣ 📜opt_path_gen.gif
+ ┃ ┣ 📜path_gen.avi
+ ┃ ┗ 📜path_gen.gif
+ ┣ 📜Dijkstra-pathplanning-srisaicharan-velisetti.py
+ ┣ 📜README.md
+ ┗ 📜project_2_output.ogv
+```
 ## Description
 
 This code uses Dijkstra's path planning algorithm to traverse nodes and locates the goal node. It stops searching once the goal node is reched and begins backtracking. The backtracking is used to find the optimal path to be taken after Dijkstra's path planning algorithm has been implemented. OpenCV is used to visualize the path taken by the point robot and the most optimal path after asigning costs to each node.
